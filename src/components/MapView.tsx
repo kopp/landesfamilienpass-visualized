@@ -147,6 +147,7 @@ export default function MapView({ items, favorites, toggleFavorite }: Props) {
   const mapRef = useRef<L.Map | null>(null);
   const [placeQuery, setPlaceQuery] = useState("");
   const [searching, setSearching] = useState(false);
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
 
   async function doSearch(e?: React.FormEvent) {
     e?.preventDefault();
@@ -171,7 +172,10 @@ export default function MapView({ items, favorites, toggleFavorite }: Props) {
           gap: 8,
         }}
       >
-        <form onSubmit={doSearch} style={{ display: "flex", gap: 8 }}>
+        <form
+          onSubmit={doSearch}
+          style={{ display: "flex", gap: 8, alignItems: "center" }}
+        >
           <input
             placeholder="City or postal code"
             value={placeQuery}
@@ -181,6 +185,14 @@ export default function MapView({ items, favorites, toggleFavorite }: Props) {
           <button style={{ padding: "6px 8px" }} onClick={doSearch}>
             {searching ? "Searching…" : "Go"}
           </button>
+          <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <input
+              type="checkbox"
+              checked={showFavoritesOnly}
+              onChange={(e) => setShowFavoritesOnly(e.target.checked)}
+            />
+            <span>Show favorites only</span>
+          </label>
         </form>
       </div>
 
@@ -192,7 +204,11 @@ export default function MapView({ items, favorites, toggleFavorite }: Props) {
       >
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         <ClusterLayer
-          items={items}
+          items={
+            showFavoritesOnly
+              ? items.filter((it) => !!favorites[makeAttractionId(it)])
+              : items
+          }
           favorites={favorites}
           toggleFavorite={toggleFavorite}
         />
