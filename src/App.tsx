@@ -1,35 +1,101 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React, { useEffect, useMemo, useState } from "react";
+import "./App.css";
+import type { Attraction, FavoritesMap } from "./types";
+import MapView from "./components/MapView";
+import TableView from "./components/TableView";
 
-function App() {
-  const [count, setCount] = useState(0)
+const FAVORITES_KEY = "lfp:favorites:v1";
 
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+function loadFavorites(): FavoritesMap {
+  try {
+    const raw = localStorage.getItem(FAVORITES_KEY);
+    if (!raw) return {};
+    return JSON.parse(raw);
+  } catch (err) {
+    return {};
+  }
 }
 
-export default App
+function saveFavorites(f: FavoritesMap) {
+  try {
+    localStorage.setItem(FAVORITES_KEY, JSON.stringify(f));
+  } catch (err) {
+    // ignore
+  }
+}
+
+export default function App(): JSX.Element {
+  const [items, setItems] = useState<Attraction[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [view, setView] = useState<"map" | "table">("map");
+  const [favorites, setFavorites] = useState<FavoritesMap>(() =>
+    loadFavorites(),
+  );
+
+  useEffect(() => {
+    fetch("/data/lfp.json")
+      .then((r) => r.json())
+      .then((j) => setItems(j))
+      .catch(() => setItems([]))
+      .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    saveFavorites(favorites);
+  }, [favorites]);
+
+  const toggleFavorite = (id: string) => {
+    setFavorites((prev) => {
+      const next = { ...prev };
+      if (next[id]) delete next[id];
+      else next[id] = true;
+      return next;
+    });
+  };
+
+  const favoritesCount = useMemo(
+    () => Object.keys(favorites).length,
+    [favorites],
+  );
+
+  return (
+    <div id="app-root">
+      <header className="app-header">
+        <h1>Landesfamilienpass — Attractions</h1>
+        <div className="header-controls">
+          <button
+            onClick={() => setView("map")}
+            className={view === "map" ? "active" : ""}
+          >
+            Map
+          </button>
+          <button
+            onClick={() => setView("table")}
+            className={view === "table" ? "active" : ""}
+          >
+            Table
+          </button>
+          <div className="fav-count">★ {favoritesCount}</div>
+        </div>
+      </header>
+
+      <main>
+        {loading ? (
+          <div>Loading…</div>
+        ) : view === "map" ? (
+          <MapView
+            items={items}
+            favorites={favorites}
+            toggleFavorite={toggleFavorite}
+          />
+        ) : (
+          <TableView
+            items={items}
+            favorites={favorites}
+            toggleFavorite={toggleFavorite}
+          />
+        )}
+      </main>
+    </div>
+  );
+}
