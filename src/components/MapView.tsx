@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { MapContainer, TileLayer, useMap } from "react-leaflet";
 import * as L from "leaflet";
+// Fix marker image missing in production mode; xref:960917625284
+// See https://github.com/vitejs/vite-plugin-vue/discussions/104
+import markerIconUrl from "../../node_modules/leaflet/dist/images/marker-icon.png";
+import markerIconRetinaUrl from "../../node_modules/leaflet/dist/images/marker-icon-2x.png";
+import markerShadowUrl from "../../node_modules/leaflet/dist/images/marker-shadow.png";
 import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
@@ -19,6 +24,12 @@ type Props = {
 function ClusterLayer({ items, favorites, toggleFavorite }: Props) {
   const map = useMap();
   const groupRef = useRef<any | null>(null);
+
+  // continue fix xref:960917625284
+  L.Icon.Default.prototype.options.iconUrl = markerIconUrl;
+  L.Icon.Default.prototype.options.iconRetinaUrl = markerIconRetinaUrl;
+  L.Icon.Default.prototype.options.shadowUrl = markerShadowUrl;
+  L.Icon.Default.imagePath = ""; // necessary to avoid Leaflet adds some prefix to image path.
 
   useEffect(() => {
     if (!map) return;
