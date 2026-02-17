@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import type { Attraction, FavoritesMap } from "../types";
 import { haversineDistanceKm, geocodePlace, makeAttractionId } from "../utils";
 
@@ -9,29 +9,28 @@ type Props = {
 };
 
 export default function TableView({ items, favorites, toggleFavorite }: Props) {
-  const [query, setQuery] = useState("");
-
+  const [query, setQuery] = useState<string>("");
   const [selectedEintritts, setSelectedEintritts] = useState<
     Record<string, boolean>
   >({});
   const [sortBy, setSortBy] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [visibleCols, setVisibleCols] = useState<Record<string, boolean>>({});
-  const [placeQuery, setPlaceQuery] = useState("");
+  const [placeQuery, setPlaceQuery] = useState<string>("");
   const [radiusKm, setRadiusKm] = useState<number | null>(null);
   const [center, setCenter] = useState<{ lat: number; lon: number } | null>(
     null,
   );
-  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
-  const [showColumnsConfig, setShowColumnsConfig] = useState(false);
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState<boolean>(false);
+  const [showColumnsConfig, setShowColumnsConfig] = useState<boolean>(false);
 
-  const allColumns = useMemo(() => {
+  const allColumns = useMemo<string[]>(() => {
     const cols = new Set<string>();
     items.forEach((it) => Object.keys(it).forEach((k) => cols.add(k)));
     return Array.from(cols);
   }, [items]);
 
-  const eintrittValues = useMemo(() => {
+  const eintrittValues = useMemo<string[]>(() => {
     const s = new Set<string>();
     items.forEach((it) => {
       if (it.Eintritt) s.add(String(it.Eintritt));
@@ -39,18 +38,17 @@ export default function TableView({ items, favorites, toggleFavorite }: Props) {
     return Array.from(s).sort();
   }, [items]);
 
-  // initialize visible columns
-  React.useEffect(() => {
-    if (allColumns.length && Object.keys(visibleCols).length === 0) {
+  useEffect(() => {
+    if (allColumns.length > 0 && Object.keys(visibleCols).length === 0) {
       const obj: Record<string, boolean> = {};
       allColumns.forEach((c) => (obj[c] = true));
-      // hide verbose/spatial columns by default
       if (Object.prototype.hasOwnProperty.call(obj, "Latitude"))
         obj["Latitude"] = false;
       if (Object.prototype.hasOwnProperty.call(obj, "Longitude"))
         obj["Longitude"] = false;
       setVisibleCols(obj);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [allColumns]);
 
   async function onSearchPlace(e?: React.FormEvent) {
@@ -68,7 +66,6 @@ export default function TableView({ items, favorites, toggleFavorite }: Props) {
         (it.Einrichtung ?? "").toLowerCase().includes(q),
       );
     }
-    // filter by selected Eintritt values (checkboxes)
     const selectedKeys = Object.keys(selectedEintritts).filter(
       (k) => selectedEintritts[k],
     );
@@ -90,12 +87,34 @@ export default function TableView({ items, favorites, toggleFavorite }: Props) {
         return d <= radiusKm;
       });
     }
-    if (showFavoritesOnly) {
-      console.log("before", list);
+    if (showFavoritesOnly)
       list = list.filter((it) => !!favorites[makeAttractionId(it)]);
-      console.log("after", list);
-    }
-    if (sortBy) {
+
+    if (sortBy === "distance" && center) {
+      list.sort((a: any, b: any) => {
+        const da =
+          typeof a.Latitude === "number" && typeof a.Longitude === "number"
+            ? haversineDistanceKm(
+                center.lat,
+                center.lon,
+                a.Latitude,
+                a.Longitude,
+              )
+            : Number.POSITIVE_INFINITY;
+        const db =
+          typeof b.Latitude === "number" && typeof b.Longitude === "number"
+            ? haversineDistanceKm(
+                center.lat,
+                center.lon,
+                b.Latitude,
+                b.Longitude,
+              )
+            : Number.POSITIVE_INFINITY;
+        if (da < db) return sortDir === "asc" ? -1 : 1;
+        if (da > db) return sortDir === "asc" ? 1 : -1;
+        return 0;
+      });
+    } else if (sortBy) {
       list.sort((a: any, b: any) => {
         const A = (a[sortBy] ?? "").toString();
         const B = (b[sortBy] ?? "").toString();
@@ -109,19 +128,19 @@ export default function TableView({ items, favorites, toggleFavorite }: Props) {
     items,
     query,
     selectedEintritts,
-    sortBy,
-    sortDir,
     center,
     radiusKm,
     showFavoritesOnly,
+    sortBy,
+    sortDir,
     favorites,
   ]);
 
-  function toggleCol(col: string) {
+  function toggleCol(col: string): void {
     setVisibleCols((s) => ({ ...s, [col]: !s[col] }));
   }
 
-  function headerClick(col: string) {
+  function headerClick(col: string): void {
     if (sortBy === col) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
     else {
       setSortBy(col);
@@ -205,6 +224,24 @@ export default function TableView({ items, favorites, toggleFavorite }: Props) {
             />
             <button type="submit">Locate</button>
           </form>
+          {center ? (
+            <div style={{ marginTop: 8 }}>
+              <span>
+                Location: {center.lat.toFixed(4)}, {center.lon.toFixed(4)}.
+                &nbsp;
+              </span>
+              <a
+                href="#"
+                onClick={() => {
+                  setCenter(null);
+                  setPlaceQuery("");
+                  setRadiusKm(null);
+                }}
+              >
+                Clear location
+              </a>
+            </div>
+          ) : null}
         </fieldset>
 
         <fieldset style={{ border: "1px solid #ddd", padding: 8 }}>
@@ -258,7 +295,24 @@ export default function TableView({ items, favorites, toggleFavorite }: Props) {
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr>
-              <th></th>
+              <th
+                key={"favorite"}
+                style={{
+                  borderBottom: "1px solid #ccc",
+                }}
+              >
+                ✭
+              </th>
+              {center != null ? (
+                <th
+                  key="distance"
+                  onClick={() => headerClick("distance")}
+                  style={{ cursor: "pointer", borderBottom: "1px solid #ccc" }}
+                >
+                  Distance (km){" "}
+                  {sortBy === "distance" ? (sortDir === "asc" ? "▲" : "▼") : ""}
+                </th>
+              ) : null}
               {allColumns.map((col) =>
                 visibleCols[col] ? (
                   <th
@@ -286,6 +340,19 @@ export default function TableView({ items, favorites, toggleFavorite }: Props) {
                       {favorites[id] ? "★" : "☆"}
                     </button>
                   </td>
+                  {center ? (
+                    <td style={{ padding: "6px 8px" }}>
+                      {typeof it.Latitude === "number" &&
+                      typeof it.Longitude === "number"
+                        ? haversineDistanceKm(
+                            center.lat,
+                            center.lon,
+                            it.Latitude,
+                            it.Longitude,
+                          ).toFixed(1)
+                        : ""}
+                    </td>
+                  ) : null}
                   {allColumns.map((col) =>
                     visibleCols[col] ? (
                       <td key={col} style={{ padding: "6px 8px" }}>
