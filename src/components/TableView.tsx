@@ -155,7 +155,7 @@ export default function TableView({ items, favorites, toggleFavorite }: Props) {
       >
         <fieldset style={{ border: "1px solid #ddd", padding: 8 }}>
           <legend>
-            <strong>Show only attractions …</strong>
+            <strong>Nur Attraktionen anzeigen …</strong>
           </legend>
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
             <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
@@ -164,21 +164,21 @@ export default function TableView({ items, favorites, toggleFavorite }: Props) {
                 checked={showFavoritesOnly}
                 onChange={(e) => setShowFavoritesOnly(e.target.checked)}
               />
-              <span>... that are favorites</span>
+              <span>... die Favoriten sind</span>
             </label>
           </div>
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
             <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
-              <span>... that match</span>
+              <span>... die folgendes enthalten:</span>
             </label>
             <input
-              placeholder="Search Einrichtung..."
+              placeholder="Einrichtung suchen..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
           </div>
           <div style={{ marginTop: 8 }}>
-            <div>... with Eintritt:</div>
+            <div>... mit Vergünstigung:</div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
               {eintrittValues.map((v) => (
                 <label
@@ -204,30 +204,30 @@ export default function TableView({ items, favorites, toggleFavorite }: Props) {
 
         <fieldset style={{ border: "1px solid #ddd", padding: 8 }}>
           <legend>
-            <strong>Find attractions near…</strong>
+            <strong>Attraktionen in der Nähe finden…</strong>
           </legend>
           <form
             onSubmit={onSearchPlace}
             style={{ display: "flex", gap: 8, alignItems: "center" }}
           >
             <input
-              placeholder="Place or postal code"
+              placeholder="Ort oder Postleitzahl"
               value={placeQuery}
               onChange={(e) => setPlaceQuery(e.target.value)}
             />
             <input
-              placeholder="radius km"
+              placeholder="Radius (km)"
               type="number"
               onChange={(e) =>
                 setRadiusKm(e.target.value ? Number(e.target.value) : null)
               }
             />
-            <button type="submit">Locate</button>
+            <button type="submit">Finden</button>
           </form>
           {center ? (
             <div style={{ marginTop: 8 }}>
               <span>
-                Location: {center.lat.toFixed(4)}, {center.lon.toFixed(4)}.
+                Standort: {center.lat.toFixed(4)}, {center.lon.toFixed(4)}.
                 &nbsp;
               </span>
               <a
@@ -238,7 +238,7 @@ export default function TableView({ items, favorites, toggleFavorite }: Props) {
                   setRadiusKm(null);
                 }}
               >
-                Clear location
+                Standort löschen
               </a>
             </div>
           ) : null}
@@ -246,7 +246,7 @@ export default function TableView({ items, favorites, toggleFavorite }: Props) {
 
         <fieldset style={{ border: "1px solid #ddd", padding: 8 }}>
           <legend>
-            <strong>Show/hide columns…</strong>
+            <strong>Spalten ein-/ausblenden…</strong>
           </legend>
           {!showColumnsConfig ? (
             <div>
@@ -257,13 +257,13 @@ export default function TableView({ items, favorites, toggleFavorite }: Props) {
                   setShowColumnsConfig(true);
                 }}
               >
-                click here to configure columns
+                Hier klicken, um Spalten zu konfigurieren
               </a>
             </div>
           ) : (
             <div>
               <div style={{ marginBottom: 8 }}>
-                click on a column header to sort by this column
+                Auf einen Spaltenkopf klicken, um danach zu sortieren
               </div>
               {allColumns.map((c) => (
                 <label key={c} style={{ marginLeft: 8 }}>
@@ -283,7 +283,7 @@ export default function TableView({ items, favorites, toggleFavorite }: Props) {
                     setShowColumnsConfig(false);
                   }}
                 >
-                  click here to hide
+                  Hier klicken, um auszublenden
                 </a>
               </div>
             </div>
@@ -309,7 +309,7 @@ export default function TableView({ items, favorites, toggleFavorite }: Props) {
                   onClick={() => headerClick("distance")}
                   style={{ cursor: "pointer", borderBottom: "1px solid #ccc" }}
                 >
-                  Distance (km){" "}
+                  Entfernung (km){" "}
                   {sortBy === "distance" ? (sortDir === "asc" ? "▲" : "▼") : ""}
                 </th>
               ) : null}

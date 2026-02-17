@@ -54,19 +54,19 @@ export default function App(): JSX.Element {
   return (
     <div id="app-root">
       <header className="app-header">
-        <h1>Landesfamilienpass — Attractions</h1>
+        <h1>Landesfamilienpass — Attraktionen</h1>
         <div className="header-controls">
           <button
             onClick={() => setView("map")}
             className={view === "map" ? "active" : ""}
           >
-            Map
+            Karte
           </button>
           <button
             onClick={() => setView("table")}
             className={view === "table" ? "active" : ""}
           >
-            Table
+            Tabelle
           </button>
           <div className="fav-count">★ {favoritesCount}</div>
         </div>

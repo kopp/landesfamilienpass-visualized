@@ -60,7 +60,7 @@ function ClusterLayer({ items, favorites, toggleFavorite }: Props) {
 
       const btn = document.createElement("button");
       btn.textContent = isFav ? "★" : "☆";
-      btn.title = isFav ? "Unstar" : "Star";
+      btn.title = isFav ? "Favorit entfernen" : "Zu Favoriten hinzufügen";
       btn.style.position = "absolute";
       btn.style.top = "0";
       btn.style.right = "0";
@@ -73,7 +73,7 @@ function ClusterLayer({ items, favorites, toggleFavorite }: Props) {
         isFav = !isFav;
         toggleFavorite(id);
         btn.textContent = isFav ? "★" : "☆";
-        btn.title = isFav ? "Unstar" : "Star";
+        btn.title = isFav ? "Favorit entfernen" : "Zu Favoriten hinzufügen";
       });
       headerDiv.appendChild(btn);
 
@@ -188,13 +188,13 @@ export default function MapView({ items, favorites, toggleFavorite }: Props) {
           style={{ display: "flex", gap: 8, alignItems: "center" }}
         >
           <input
-            placeholder="City or postal code"
+            placeholder="Stadt oder Postleitzahl"
             value={placeQuery}
             onChange={(e) => setPlaceQuery(e.target.value)}
             style={{ padding: "6px 8px" }}
           />
           <button style={{ padding: "6px 8px" }} onClick={doSearch}>
-            {searching ? "Searching…" : "Go"}
+            {searching ? "Suche…" : "Suchen"}
           </button>
           <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <input
@@ -202,7 +202,7 @@ export default function MapView({ items, favorites, toggleFavorite }: Props) {
               checked={showFavoritesOnly}
               onChange={(e) => setShowFavoritesOnly(e.target.checked)}
             />
-            <span>Show favorites only</span>
+            <span>Nur Favoriten anzeigen</span>
           </label>
         </form>
       </div>
