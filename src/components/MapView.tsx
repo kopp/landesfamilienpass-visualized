@@ -37,20 +37,36 @@ function ClusterLayer({ items, favorites, toggleFavorite }: Props) {
       let isFav = !!favorites[id];
       const popupContent = document.createElement("div");
       popupContent.style.minWidth = "200px";
+
+      // header container: title + star button at top-right
+      const headerDiv = document.createElement("div");
+      headerDiv.style.position = "relative";
+      headerDiv.style.paddingRight = "28px";
+
       const title = document.createElement("strong");
       title.textContent = it.Einrichtung;
-      popupContent.appendChild(title);
+      headerDiv.appendChild(title);
 
       const btn = document.createElement("button");
-      btn.textContent = isFav ? "★ Unstar" : "☆ Star";
-      btn.style.display = "block";
-      btn.style.marginTop = "8px";
-      btn.onclick = () => {
+      btn.textContent = isFav ? "★" : "☆";
+      btn.title = isFav ? "Unstar" : "Star";
+      btn.style.position = "absolute";
+      btn.style.top = "0";
+      btn.style.right = "0";
+      btn.style.border = "none";
+      btn.style.background = "lightgray";
+      btn.style.cursor = "pointer";
+      btn.style.fontSize = "18px";
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
         isFav = !isFav;
         toggleFavorite(id);
-        btn.textContent = isFav ? "★ Unstar" : "☆ Star";
-      };
-      popupContent.appendChild(btn);
+        btn.textContent = isFav ? "★" : "☆";
+        btn.title = isFav ? "Unstar" : "Star";
+      });
+      headerDiv.appendChild(btn);
+
+      popupContent.appendChild(headerDiv);
 
       const details = document.createElement("div");
       details.style.marginTop = "6px";
@@ -72,39 +88,26 @@ function ClusterLayer({ items, favorites, toggleFavorite }: Props) {
           a.target = "_blank";
           a.rel = "noopener noreferrer";
           a.textContent = hp;
+          // prevent map from closing popup when clicking the link
+          a.addEventListener("click", (e) => e.stopPropagation());
           hpDiv.appendChild(a);
           popupContent.appendChild(hpDiv);
         }
       }
 
-      // Hinweis (expandable)
+      // Hinweis (show full text)
       if (it.Hinweis) {
         const hintText = String(it.Hinweis);
         const hintContainer = document.createElement("div");
         hintContainer.style.marginTop = "6px";
-        const hintPreview = document.createElement("div");
-        const maxLen = 140;
-        const short =
-          hintText.length > maxLen ? hintText.slice(0, maxLen) + "…" : hintText;
-        hintPreview.textContent = short;
-        hintContainer.appendChild(hintPreview);
-        if (hintText.length > maxLen) {
-          const expandBtn = document.createElement("button");
-          expandBtn.textContent = "Mehr";
-          expandBtn.style.marginTop = "6px";
-          expandBtn.onclick = () => {
-            if (hintPreview.textContent === short) {
-              hintPreview.textContent = hintText;
-              expandBtn.textContent = "Weniger";
-            } else {
-              hintPreview.textContent = short;
-              expandBtn.textContent = "Mehr";
-            }
-          };
-          hintContainer.appendChild(expandBtn);
-        }
+        const hintFull = document.createElement("div");
+        hintFull.textContent = hintText;
+        hintContainer.appendChild(hintFull);
         popupContent.appendChild(hintContainer);
       }
+      // prevent clicks inside the popup (buttons/links) from closing it or propagating to the map
+      L.DomEvent.disableClickPropagation(popupContent);
+      L.DomEvent.disableScrollPropagation(popupContent);
       marker.bindPopup(popupContent);
       groupRef.current!.addLayer(marker);
     });
@@ -118,61 +121,83 @@ function ClusterLayer({ items, favorites, toggleFavorite }: Props) {
   return null;
 }
 
-function MapReady({ mapRef }: { mapRef: React.MutableRefObject<L.Map | null> }) {
-  const map = useMap()
+function MapReady({
+  mapRef,
+}: {
+  mapRef: React.MutableRefObject<L.Map | null>;
+}) {
+  const map = useMap();
   useEffect(() => {
-    mapRef.current = map
+    mapRef.current = map;
     // move zoom control to bottomright: remove default and add a new one
-    const zoomCtrl = L.control.zoom({ position: 'bottomright' })
-    zoomCtrl.addTo(map)
+    const zoomCtrl = L.control.zoom({ position: "bottomright" });
+    zoomCtrl.addTo(map);
     return () => {
       try {
-        zoomCtrl.remove()
+        zoomCtrl.remove();
       } catch (e) {
         // ignore
       }
-    }
-  }, [map, mapRef])
-  return null
+    };
+  }, [map, mapRef]);
+  return null;
 }
 
 export default function MapView({ items, favorites, toggleFavorite }: Props) {
-  const mapRef = useRef<L.Map | null>(null)
-  const [placeQuery, setPlaceQuery] = useState('')
-  const [searching, setSearching] = useState(false)
+  const mapRef = useRef<L.Map | null>(null);
+  const [placeQuery, setPlaceQuery] = useState("");
+  const [searching, setSearching] = useState(false);
 
   async function doSearch(e?: React.FormEvent) {
-    e?.preventDefault()
-    if (!placeQuery) return
-    setSearching(true)
-    const res = await geocodePlace(placeQuery)
-    setSearching(false)
+    e?.preventDefault();
+    if (!placeQuery) return;
+    setSearching(true);
+    const res = await geocodePlace(placeQuery);
+    setSearching(false);
     if (res && mapRef.current) {
-      mapRef.current.setView([res.lat, res.lon], 12, { animate: true })
+      mapRef.current.setView([res.lat, res.lon], 12, { animate: true });
     }
   }
 
   return (
-    <div style={{ height: '70vh', width: '100%', position: 'relative' }}>
-      <div style={{ position: 'absolute', top: 8, left: 8, zIndex: 1000, display: 'flex', gap: 8 }}>
-        <form onSubmit={doSearch} style={{ display: 'flex', gap: 8 }}>
+    <div style={{ height: "70vh", width: "100%", position: "relative" }}>
+      <div
+        style={{
+          position: "absolute",
+          top: 8,
+          left: 8,
+          zIndex: 1000,
+          display: "flex",
+          gap: 8,
+        }}
+      >
+        <form onSubmit={doSearch} style={{ display: "flex", gap: 8 }}>
           <input
             placeholder="City or postal code"
             value={placeQuery}
             onChange={(e) => setPlaceQuery(e.target.value)}
-            style={{ padding: '6px 8px' }}
+            style={{ padding: "6px 8px" }}
           />
-          <button style={{ padding: '6px 8px' }} onClick={doSearch}>
-            {searching ? 'Searching…' : 'Go'}
+          <button style={{ padding: "6px 8px" }} onClick={doSearch}>
+            {searching ? "Searching…" : "Go"}
           </button>
         </form>
       </div>
 
-      <MapContainer center={DefaultCenter} zoom={8} style={{ height: '100%', width: '100%' }} zoomControl={false}>
+      <MapContainer
+        center={DefaultCenter}
+        zoom={8}
+        style={{ height: "100%", width: "100%" }}
+        zoomControl={false}
+      >
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-        <ClusterLayer items={items} favorites={favorites} toggleFavorite={toggleFavorite} />
+        <ClusterLayer
+          items={items}
+          favorites={favorites}
+          toggleFavorite={toggleFavorite}
+        />
         <MapReady mapRef={mapRef} />
       </MapContainer>
     </div>
-  )
+  );
 }
