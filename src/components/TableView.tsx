@@ -194,13 +194,39 @@ export default function TableView({ items, favorites, toggleFavorite }: Props) {
                       {favorites[id] ? "★" : "☆"}
                     </button>
                   </td>
-                  {allColumns.map(
-                    (col) =>
-                      visibleCols[col] && (
-                        <td key={col} style={{ padding: "6px 8px" }}>
-                          {String((it as any)[col] ?? "")}
-                        </td>
-                      ),
+                  {allColumns.map((col) =>
+                    visibleCols[col] ? (
+                      <td key={col} style={{ padding: "6px 8px" }}>
+                        {(() => {
+                          const raw = (it as any)[col];
+                          if (col === "Homepage" && raw) {
+                            const parts = String(raw)
+                              .split(/[;,\n]+/)
+                              .map((s) => s.trim())
+                              .filter(Boolean);
+                            return (
+                              <div>
+                                {parts.map((p, i) => (
+                                  <span key={i}>
+                                    <a
+                                      href={
+                                        p.startsWith("http") ? p : `http://${p}`
+                                      }
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                    >
+                                      {p}
+                                    </a>
+                                    {i < parts.length - 1 ? <br /> : null}
+                                  </span>
+                                ))}
+                              </div>
+                            );
+                          }
+                          return String(raw ?? "");
+                        })()}
+                      </td>
+                    ) : null,
                   )}
                 </tr>
               );
