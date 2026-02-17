@@ -19,6 +19,7 @@ export default function TableView({ items, favorites, toggleFavorite }: Props) {
   const [center, setCenter] = useState<{ lat: number; lon: number } | null>(
     null,
   );
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
 
   const allColumns = useMemo(() => {
     const cols = new Set<string>();
@@ -68,6 +69,11 @@ export default function TableView({ items, favorites, toggleFavorite }: Props) {
         return d <= radiusKm;
       });
     }
+    if (showFavoritesOnly) {
+      console.log("before", list);
+      list = list.filter((it) => !!favorites[makeAttractionId(it)]);
+      console.log("after", list);
+    }
     if (sortBy) {
       list.sort((a: any, b: any) => {
         const A = (a[sortBy] ?? "").toString();
@@ -78,7 +84,17 @@ export default function TableView({ items, favorites, toggleFavorite }: Props) {
       });
     }
     return list;
-  }, [items, query, eintrittFilter, sortBy, sortDir, center, radiusKm]);
+  }, [
+    items,
+    query,
+    eintrittFilter,
+    sortBy,
+    sortDir,
+    center,
+    radiusKm,
+    showFavoritesOnly,
+    favorites,
+  ]);
 
   function toggleCol(col: string) {
     setVisibleCols((s) => ({ ...s, [col]: !s[col] }));
@@ -122,6 +138,14 @@ export default function TableView({ items, favorites, toggleFavorite }: Props) {
           />
           <button type="submit">Locate</button>
         </form>
+        <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+          <input
+            type="checkbox"
+            checked={showFavoritesOnly}
+            onChange={(e) => setShowFavoritesOnly(e.target.checked)}
+          />
+          <span>Show favorites only</span>
+        </label>
       </div>
 
       <div style={{ marginBottom: 12 }}>
