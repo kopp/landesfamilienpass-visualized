@@ -32,6 +32,11 @@ export default function TableView({ items, favorites, toggleFavorite }: Props) {
     if (allColumns.length && Object.keys(visibleCols).length === 0) {
       const obj: Record<string, boolean> = {};
       allColumns.forEach((c) => (obj[c] = true));
+      // hide verbose/spatial columns by default
+      if (Object.prototype.hasOwnProperty.call(obj, "Latitude"))
+        obj["Latitude"] = false;
+      if (Object.prototype.hasOwnProperty.call(obj, "Longitude"))
+        obj["Longitude"] = false;
       setVisibleCols(obj);
     }
   }, [allColumns]);
