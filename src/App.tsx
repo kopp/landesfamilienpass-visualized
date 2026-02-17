@@ -3,6 +3,7 @@ import "./App.css";
 import type { Attraction, FavoritesMap } from "./types";
 import MapView from "./components/MapView";
 import TableView from "./components/TableView";
+import DATA from "./data/lfp.json";
 
 const FAVORITES_KEY = "lfp:favorites:v1";
 
@@ -25,20 +26,12 @@ function saveFavorites(f: FavoritesMap) {
 }
 
 export default function App(): JSX.Element {
-  const [items, setItems] = useState<Attraction[]>([]);
-  const [loading, setLoading] = useState(true);
   const [view, setView] = useState<"map" | "table">("map");
   const [favorites, setFavorites] = useState<FavoritesMap>(() =>
     loadFavorites(),
   );
 
-  useEffect(() => {
-    fetch("/public/data/lfp.json")
-      .then((r) => r.json())
-      .then((j) => setItems(j))
-      .catch(() => setItems([]))
-      .finally(() => setLoading(false));
-  }, []);
+  const items = DATA as Attraction[];
 
   useEffect(() => {
     saveFavorites(favorites);
@@ -80,9 +73,7 @@ export default function App(): JSX.Element {
       </header>
 
       <main>
-        {loading ? (
-          <div>Loading…</div>
-        ) : view === "map" ? (
+        {view === "map" ? (
           <MapView
             items={items}
             favorites={favorites}
