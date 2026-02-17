@@ -33,7 +33,7 @@ export default function App(): JSX.Element {
   );
 
   useEffect(() => {
-    fetch("/data/lfp.json")
+    fetch("/public/data/lfp.json")
       .then((r) => r.json())
       .then((j) => setItems(j))
       .catch(() => setItems([]))
