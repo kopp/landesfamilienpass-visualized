@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import "./App.css";
 import type { Attraction, FavoritesMap } from "./types";
 import MapView from "./components/MapView";
