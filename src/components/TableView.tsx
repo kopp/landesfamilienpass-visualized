@@ -10,7 +10,10 @@ type Props = {
 
 export default function TableView({ items, favorites, toggleFavorite }: Props) {
   const [query, setQuery] = useState("");
-  const [eintrittFilter, setEintrittFilter] = useState<string>("");
+
+  const [selectedEintritts, setSelectedEintritts] = useState<
+    Record<string, boolean>
+  >({});
   const [sortBy, setSortBy] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [visibleCols, setVisibleCols] = useState<Record<string, boolean>>({});
@@ -20,11 +23,20 @@ export default function TableView({ items, favorites, toggleFavorite }: Props) {
     null,
   );
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [showColumnsConfig, setShowColumnsConfig] = useState(false);
 
   const allColumns = useMemo(() => {
     const cols = new Set<string>();
     items.forEach((it) => Object.keys(it).forEach((k) => cols.add(k)));
     return Array.from(cols);
+  }, [items]);
+
+  const eintrittValues = useMemo(() => {
+    const s = new Set<string>();
+    items.forEach((it) => {
+      if (it.Eintritt) s.add(String(it.Eintritt));
+    });
+    return Array.from(s).sort();
   }, [items]);
 
   // initialize visible columns
@@ -56,9 +68,13 @@ export default function TableView({ items, favorites, toggleFavorite }: Props) {
         (it.Einrichtung ?? "").toLowerCase().includes(q),
       );
     }
-    if (eintrittFilter) {
-      list = list.filter(
-        (it) => (it.Eintritt ?? "").toString() === eintrittFilter,
+    // filter by selected Eintritt values (checkboxes)
+    const selectedKeys = Object.keys(selectedEintritts).filter(
+      (k) => selectedEintritts[k],
+    );
+    if (selectedKeys.length > 0) {
+      list = list.filter((it) =>
+        selectedKeys.includes(String(it.Eintritt ?? "")),
       );
     }
     if (center && radiusKm != null) {
@@ -92,7 +108,7 @@ export default function TableView({ items, favorites, toggleFavorite }: Props) {
   }, [
     items,
     query,
-    eintrittFilter,
+    selectedEintritts,
     sortBy,
     sortDir,
     center,
@@ -118,53 +134,124 @@ export default function TableView({ items, favorites, toggleFavorite }: Props) {
       <div
         style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 12 }}
       >
-        <input
-          placeholder="Search Einrichtung..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
-        <input
-          placeholder="Eintritt exact"
-          value={eintrittFilter}
-          onChange={(e) => setEintrittFilter(e.target.value)}
-        />
-        <form onSubmit={onSearchPlace} style={{ display: "flex", gap: 8 }}>
-          <input
-            placeholder="Place or postal code"
-            value={placeQuery}
-            onChange={(e) => setPlaceQuery(e.target.value)}
-          />
-          <input
-            placeholder="radius km"
-            type="number"
-            onChange={(e) =>
-              setRadiusKm(e.target.value ? Number(e.target.value) : null)
-            }
-          />
-          <button type="submit">Locate</button>
-        </form>
-        <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <input
-            type="checkbox"
-            checked={showFavoritesOnly}
-            onChange={(e) => setShowFavoritesOnly(e.target.checked)}
-          />
-          <span>Show favorites only</span>
-        </label>
-      </div>
-
-      <div style={{ marginBottom: 12 }}>
-        <strong>Columns:</strong>
-        {allColumns.map((c) => (
-          <label key={c} style={{ marginLeft: 8 }}>
+        <fieldset style={{ border: "1px solid #ddd", padding: 8 }}>
+          <legend>
+            <strong>Show only attractions …</strong>
+          </legend>
+          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <input
+                type="checkbox"
+                checked={showFavoritesOnly}
+                onChange={(e) => setShowFavoritesOnly(e.target.checked)}
+              />
+              <span>... that are favorites</span>
+            </label>
+          </div>
+          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <span>... that match</span>
+            </label>
             <input
-              type="checkbox"
-              checked={!!visibleCols[c]}
-              onChange={() => toggleCol(c)}
-            />{" "}
-            {c}
-          </label>
-        ))}
+              placeholder="Search Einrichtung..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </div>
+          <div style={{ marginTop: 8 }}>
+            <div>... with Eintritt:</div>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              {eintrittValues.map((v) => (
+                <label
+                  key={v}
+                  style={{ display: "flex", gap: 6, alignItems: "center" }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={!!selectedEintritts[v]}
+                    onChange={(e) =>
+                      setSelectedEintritts((s) => ({
+                        ...s,
+                        [v]: e.target.checked,
+                      }))
+                    }
+                  />
+                  <span>{v}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        </fieldset>
+
+        <fieldset style={{ border: "1px solid #ddd", padding: 8 }}>
+          <legend>
+            <strong>Find attractions near…</strong>
+          </legend>
+          <form
+            onSubmit={onSearchPlace}
+            style={{ display: "flex", gap: 8, alignItems: "center" }}
+          >
+            <input
+              placeholder="Place or postal code"
+              value={placeQuery}
+              onChange={(e) => setPlaceQuery(e.target.value)}
+            />
+            <input
+              placeholder="radius km"
+              type="number"
+              onChange={(e) =>
+                setRadiusKm(e.target.value ? Number(e.target.value) : null)
+              }
+            />
+            <button type="submit">Locate</button>
+          </form>
+        </fieldset>
+
+        <fieldset style={{ border: "1px solid #ddd", padding: 8 }}>
+          <legend>
+            <strong>Show/hide columns…</strong>
+          </legend>
+          {!showColumnsConfig ? (
+            <div>
+              <a
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setShowColumnsConfig(true);
+                }}
+              >
+                click here to configure columns
+              </a>
+            </div>
+          ) : (
+            <div>
+              <div style={{ marginBottom: 8 }}>
+                click on a column header to sort by this column
+              </div>
+              {allColumns.map((c) => (
+                <label key={c} style={{ marginLeft: 8 }}>
+                  <input
+                    type="checkbox"
+                    checked={!!visibleCols[c]}
+                    onChange={() => toggleCol(c)}
+                  />{" "}
+                  {c}
+                </label>
+              ))}
+              <div>
+                <a
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setShowColumnsConfig(false);
+                  }}
+                >
+                  click here to hide
+                </a>
+              </div>
+            </div>
+          )}
+        </fieldset>
       </div>
 
       <div style={{ overflow: "auto", maxHeight: "60vh" }}>
