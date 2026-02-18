@@ -36,7 +36,9 @@ function ClusterLayer({ items, favorites, toggleFavorite }: Props) {
     if (groupRef.current) {
       groupRef.current.clearLayers();
     } else {
-      groupRef.current = (L as any).markerClusterGroup();
+      groupRef.current = (L as any).markerClusterGroup({
+        // disableClusteringAtZoom: 12,
+      });
       map.addLayer(groupRef.current);
     }
 
@@ -83,7 +85,7 @@ function ClusterLayer({ items, favorites, toggleFavorite }: Props) {
       details.style.marginTop = "6px";
       details.innerHTML = `
         <div>${it.Strasse ?? ""}</div>
-        <div>${it.PLZ ?? ""} ${it.Ort_Stadt ?? ""}</div>
+        <div>${it.PLZ ?? ""} ${it.Ort ?? ""}</div>
         <div>Eintritt: ${it.Eintritt ?? ""}</div>
       `;
       popupContent.appendChild(details);
@@ -154,11 +156,29 @@ function MapReady({
   return null;
 }
 
+function applyFilters(
+  items: Attraction[],
+  favorites: FavoritesMap,
+  showFavoritesOnly: boolean,
+  showFreeAdmissionOnly: boolean,
+): Attraction[] {
+  return items.filter((it) => {
+    if (showFavoritesOnly) {
+      return !!favorites[makeAttractionId(it)];
+    }
+    if (showFreeAdmissionOnly) {
+      return it.Eintritt == "K";
+    }
+    return true;
+  });
+}
+
 export default function MapView({ items, favorites, toggleFavorite }: Props) {
   const mapRef = useRef<L.Map | null>(null);
   const [placeQuery, setPlaceQuery] = useState("");
   const [searching, setSearching] = useState(false);
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [showFreeAdmissionOnly, setShowFreeAdmissionOnly] = useState(false);
 
   async function doSearch(e?: React.FormEvent) {
     e?.preventDefault();
@@ -204,6 +224,14 @@ export default function MapView({ items, favorites, toggleFavorite }: Props) {
             />
             <span>Nur Favoriten anzeigen</span>
           </label>
+          <label style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <input
+              type="checkbox"
+              checked={showFreeAdmissionOnly}
+              onChange={(e) => setShowFreeAdmissionOnly(e.target.checked)}
+            />
+            <span>Nur kostenlose anzeigen</span>
+          </label>
         </form>
       </div>
 
@@ -215,11 +243,12 @@ export default function MapView({ items, favorites, toggleFavorite }: Props) {
       >
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         <ClusterLayer
-          items={
-            showFavoritesOnly
-              ? items.filter((it) => !!favorites[makeAttractionId(it)])
-              : items
-          }
+          items={applyFilters(
+            items,
+            favorites,
+            showFavoritesOnly,
+            showFreeAdmissionOnly,
+          )}
           favorites={favorites}
           toggleFavorite={toggleFavorite}
         />
