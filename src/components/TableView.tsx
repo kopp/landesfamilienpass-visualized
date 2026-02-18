@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import type { Attraction, FavoritesMap } from "../types";
+import { explainEintritt, type Attraction, type FavoritesMap } from "../types";
 import { haversineDistanceKm, geocodePlace, makeAttractionId } from "../utils";
 
 type Props = {
@@ -159,17 +159,17 @@ export default function TableView({ items, favorites, toggleFavorite }: Props) {
           </legend>
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
             <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              <span>... die Favoriten sind</span>
               <input
                 type="checkbox"
                 checked={showFavoritesOnly}
                 onChange={(e) => setShowFavoritesOnly(e.target.checked)}
               />
-              <span>... die Favoriten sind</span>
             </label>
           </div>
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
             <label style={{ display: "flex", gap: 6, alignItems: "center" }}>
-              <span>... die folgendes enthalten:</span>
+              <span>... die Begriff enthalten:</span>
             </label>
             <input
               placeholder="Einrichtung suchen..."
@@ -178,8 +178,8 @@ export default function TableView({ items, favorites, toggleFavorite }: Props) {
             />
           </div>
           <div style={{ marginTop: 8 }}>
-            <div>... mit Vergünstigung:</div>
             <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              ... mit Vergünstigung:
               {eintrittValues.map((v) => (
                 <label
                   key={v}
@@ -195,7 +195,7 @@ export default function TableView({ items, favorites, toggleFavorite }: Props) {
                       }))
                     }
                   />
-                  <span>{v}</span>
+                  <span>{explainEintritt(v)}</span>
                 </label>
               ))}
             </div>

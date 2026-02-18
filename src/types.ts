@@ -24,7 +24,7 @@ export function explainEintritt(e: string, long: boolean = false): string {
         return "Erwachsene ermäßigt, Kinder kostenlos";
       }
       else {
-        return "ermmäßigt*";
+        return "ermäßigt*";
       }
     case "E":
       return "ermäßigt";
