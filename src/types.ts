@@ -1,16 +1,17 @@
 export type Attraction = {
   Einrichtung: string
-  PLZ?: string
-  Ort_Stadt?: string
-  Strasse?: string
-  Latitude?: number
-  Longitude?: number
-  Eintritt?: string | null
-  LFP_erforderlich?: boolean | string
-  Gutschein_erforderlich?: string | null
-  Hinweis?: string | null
-  Homepage?: string | null
-  Telefon?: string | null
+  PLZ: string
+  Ort: string
+  Strasse: string
+  Latitude: number
+  Longitude: number
+  Eintritt: string
+  LFP_erforderlich: boolean
+  Gutschein_erforderlich: boolean
+  Hinweis: string
+  Homepage: string
+  Telefon: string
 }
 
+// mapping from 'id' (based on content) to whether it is a favorite
 export type FavoritesMap = Record<string, boolean>

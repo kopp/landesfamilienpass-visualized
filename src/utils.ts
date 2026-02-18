@@ -18,10 +18,8 @@ export function haversineDistanceKm(
 }
 
 export function makeAttractionId(a: Attraction): string {
-  // stable-ish id based on name + coordinates
-  const lat = a.Latitude ?? ''
-  const lon = a.Longitude ?? ''
-  return `${a.Einrichtung}::${lat}::${lon}`
+  // stable-ish id
+  return `${a.PLZ}::${a.Einrichtung}`
 }
 
 export async function geocodePlace(query: string): Promise<{ lat: number; lon: number } | null> {
