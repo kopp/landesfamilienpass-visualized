@@ -8,6 +8,18 @@ type Props = {
   toggleFavorite: (id: string) => void;
 };
 
+// find special names for columns
+function nameColumn(name: string): string {
+  switch (name) {
+    case "LFP_erforderlich":
+      return "Pass";
+    case "Gutschein_erforderlich":
+      return "Gutschein";
+    default:
+      return name;
+  }
+}
+
 export default function TableView({ items, favorites, toggleFavorite }: Props) {
   const [query, setQuery] = useState<string>("");
   const [selectedEintritts, setSelectedEintritts] = useState<
@@ -265,16 +277,19 @@ export default function TableView({ items, favorites, toggleFavorite }: Props) {
               <div style={{ marginBottom: 8 }}>
                 Auf einen Spaltenkopf klicken, um danach zu sortieren
               </div>
-              {allColumns.map((c) => (
-                <label key={c} style={{ marginLeft: 8 }}>
-                  <input
-                    type="checkbox"
-                    checked={!!visibleCols[c]}
-                    onChange={() => toggleCol(c)}
-                  />{" "}
-                  {c}
-                </label>
-              ))}
+              <div>
+                Spalten aktivieren oder deaktivieren:
+                {allColumns.map((c) => (
+                  <label key={c} style={{ marginLeft: 8 }}>
+                    <input
+                      type="checkbox"
+                      checked={!!visibleCols[c]}
+                      onChange={() => toggleCol(c)}
+                    />{" "}
+                    {c}
+                  </label>
+                ))}
+              </div>
               <div>
                 <a
                   href="#"
@@ -323,7 +338,7 @@ export default function TableView({ items, favorites, toggleFavorite }: Props) {
                       borderBottom: "1px solid #ccc",
                     }}
                   >
-                    {col}{" "}
+                    {nameColumn(col)}{" "}
                     {sortBy === col ? (sortDir === "asc" ? "▲" : "▼") : ""}
                   </th>
                 ) : null,
@@ -382,6 +397,12 @@ export default function TableView({ items, favorites, toggleFavorite }: Props) {
                               </div>
                             );
                           }
+                          if (col == "Eintritt")
+                            return explainEintritt(String(raw));
+                          if (col == "LFP_erforderlich")
+                            return raw ? "💎 ja" : "ohne";
+                          if (col == "Gutschein_erforderlich")
+                            return raw ? "🎞 ja" : "ohne";
                           return String(raw ?? "");
                         })()}
                       </td>
@@ -392,6 +413,10 @@ export default function TableView({ items, favorites, toggleFavorite }: Props) {
             })}
           </tbody>
         </table>
+      </div>
+      <div>
+        Hinweis: {explainEintritt("E/K", false)} bedeutet: "
+        {explainEintritt("E/K", true)}".
       </div>
     </div>
   );
