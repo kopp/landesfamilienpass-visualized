@@ -10,7 +10,7 @@ import "leaflet/dist/leaflet.css";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import "leaflet.markercluster";
-import type { Attraction, FavoritesMap } from "../types";
+import { explainEintritt, type Attraction, type FavoritesMap } from "../types";
 import { makeAttractionId, geocodePlace } from "../utils";
 
 const DefaultCenter: [number, number] = [48.7, 9.0];
@@ -84,10 +84,19 @@ function ClusterLayer({ items, favorites, toggleFavorite }: Props) {
       const details = document.createElement("div");
       details.style.marginTop = "6px";
       details.innerHTML = `
-        <div>${it.Strasse ?? ""}</div>
-        <div>${it.PLZ ?? ""} ${it.Ort ?? ""}</div>
-        <div>Eintritt: ${it.Eintritt ?? ""}</div>
+        <div>${it.Strasse}, ${it.PLZ} ${it.Ort}</div>
+        <div>Eintritt: ${explainEintritt(it.Eintritt, true)}</div>
       `;
+      if (it.Gutschein_erforderlich) {
+        const gutscheine = document.createElement("div");
+        gutscheine.textContent = "Gutscheine erforderlich";
+        details.appendChild(gutscheine);
+      }
+      if (!it.LFP_erforderlich) {
+        const lfp = document.createElement("div");
+        lfp.textContent = "Ohne Landesfamilienpass möglich.";
+        details.appendChild(lfp);
+      }
       popupContent.appendChild(details);
 
       // Homepage (first URL if multiple)
